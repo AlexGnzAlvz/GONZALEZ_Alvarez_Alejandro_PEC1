@@ -99,6 +99,8 @@ write.csv(col_metadata, "col_metadata.csv", row.names = FALSE)
 ```
 
 
+Para crear el repositorio de GItHub vamos a "Repositories" y a la izquierda de la pantalla pinchamos en "New". Esto abre una nueva ventana donde elegimos los parámetros básicos del mismo y le damos nombre. En la ventana inicial está la opción de subir archivos al repositorio, la seleccionamos y subimos los archivos que se piden simplemente buscándolos en la carpeta de nuestro proyecto de de R y arrastrando a GitHub
 
+La URL de nuestro repositorio es https://github.com/AlexGnzAlvz/GONZALEZ_Alvarez_Alejandro_PEC1.git
 
 
