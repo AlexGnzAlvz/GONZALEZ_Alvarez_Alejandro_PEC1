@@ -1,0 +1,104 @@
+---
+title: "PEC1_Alejandro Gonzalez"
+output:
+  pdf_document:
+    latex_engine: xelatex
+date: "2024-11-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+En primer lugar seleccionamos un dataset del repositorio "https://github.com/nutrimetabolomics/metaboData/". A través de ese enlace entramos en un repositorio de GitHub denominado "metaboData" que contiene algunos datasets de metabolómica obtenidos de fuentes públicas. Dentro de la carpeta "Datasets", he decidido trabajar con los datos de  "2024-Cachexia". Me descargo el archivo "human_cachexia.csv", pinchando sobre el se visualizan los datos y arriba a la derecha está la opción de "Download raw file".
+
+A contiuación cargamos los datos en R
+
+```{r}
+# Instalamos y cargamos las librerías necesarias
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install(c("SummarizedExperiment", "BiocGenerics"))
+
+# Cargamos las librerías adicionales para análisis y visualización
+library(SummarizedExperiment)
+library(BiocGenerics)
+library(ggplot2)
+
+# Cargamos los datos
+dataset <- read.csv("/Users/alejandrogonzalez/Desktop/Alex/Curro/UOC/Master Bioinformatica y Bioestadistica/Análisis de datos ómicos/PEC1/human_cachexia.csv", row.names = 1) 
+```
+
+
+El dataset contiene principalmente columnas con parámetros numéricos, pero la primera columna corresponde a texto con los los identificadores de la condición ("cachexic" y "control"). Procesamos el dataset para separar los datos de texto y los datos numéricos
+
+```{r}
+# Procesamos el dataset para separar los datos de texto y los datos numéricos
+# La primera columna contiene los identificadores de la condición ("cachexic" y "control")
+conditions <- dataset[, 1]               # Guardamos la columna de condiciones
+expression_data <- as.matrix(dataset[, -1])  # Seleccionamos solo las columnas numéricas
+```
+
+
+Creamos el objeto SummarizedExperiment
+
+```{r}
+# Creamos el objeto SummarizedExperiment
+# Primero creamos un dataframe con los metadatos de filas (id de pacientes) y columnas (parámetros de metabolómica)
+row_metadata <- data.frame(
+  Condition = conditions,  # Usamos las condiciones como metadatos de los pacientes
+  stringsAsFactors = FALSE
+)
+
+# Usamos los nombres de las columnas como nombres de los parámetros
+col_metadata <- data.frame(
+  Parameter = colnames(expression_data),
+  Description = "Parámetro metabólico",
+  stringsAsFactors = FALSE
+)
+
+# Creamos el objeto SummarizedExperiment
+se_object <- SummarizedExperiment(
+  assays = list(counts = expression_data),
+  rowData = row_metadata,
+  colData = col_metadata
+)
+```
+
+
+Una vez creado el objeto SummarizedExperiment, exploramos el dataset
+
+```{r}
+# Realizamos una Visualización básica de los datos, su distribución y resumen estadístico
+summary(assay(se_object))
+hist(assay(se_object)[,1], main = "Distribución de intensidades del primer parámetro", xlab = "Intensidad")
+
+# Realizamos un Análisis de componentes principales (PCA) para la exploración de posibles agrupamientos
+if (!requireNamespace("factoextra", quietly = TRUE))
+  install.packages("factoextra")
+library(factoextra)
+
+# Realizamos PCA y graficamos
+pca <- prcomp(assay(se_object), scale. = TRUE)  # Cada fila es un paciente, cada columna es un parámetro
+fviz_pca_ind(pca, label = "none", habillage = row_metadata$Condition) +
+  labs(title = "PCA de los pacientes por condición (cachexic vs control)") +
+  theme_minimal()
+```
+
+
+Por último guardamos el objeto SummarizedExperiment y los otros elementos para el repositorio de GitHub
+
+```{r}
+# Guardamos el objeto SummarizedExperiment
+save(se_object, file = "se_object.Rda")
+
+# Guardamos los datos y metadatos en formato texto
+write.csv(expression_data, "expression_data.csv", row.names = FALSE)
+write.csv(row_metadata, "row_metadata.csv", row.names = FALSE)
+write.csv(col_metadata, "col_metadata.csv", row.names = FALSE)
+```
+
+
+
+
+
